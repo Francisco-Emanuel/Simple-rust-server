@@ -1,0 +1,1 @@
+Simple actix server in rust, just trying to learn rust and htmx at the same time
