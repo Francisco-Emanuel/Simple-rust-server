@@ -1,0 +1,12 @@
+{% extends 'layout.html' %}
+
+
+{% block content %}
+    <h2>Esse é meu bloco conteudo</h2>
+
+    <p>
+        {{ hello_from_rust }}
+    </p>
+    <div id="ping"></div>
+    <button hx-get="/ping" hx-target="#ping" hx-swap="outerHTML">click</button>
+{% endblock %}
