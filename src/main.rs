@@ -1,3 +1,4 @@
+use actix_files as fs;
 use actix_web::{get, post, delete, put, patch, web, App, HttpResponse, HttpServer, Responder};
 use lazy_static::lazy_static;
 use tera::Tera;
@@ -13,12 +14,11 @@ lazy_static! {
 #[get("/")]
 async fn index() -> impl Responder {
     let mut context = tera::Context::new();
-    context.insert("hello_from_rust", "Ola do rust!");
+    context.insert("hello_from_rust", "this comes from rust!");
     let page_content = TEMPLATES.render("index.html", &context).unwrap();
     HttpResponse::Ok().body(page_content)
 }
 
-// Tentando fazer o htmx funcionar (Não está afetando o código, mas tambem não faz nada)
 #[get("/ping")]
 async fn pong() -> impl Responder {
     HttpResponse::Ok().body("Pong!")
@@ -30,6 +30,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .service(index)
             .service(pong)
+            .service(fs::Files::new("/static", "./static").show_files_listing())
     })
     .bind(("127.0.0.1", 42069))?
     .run()
