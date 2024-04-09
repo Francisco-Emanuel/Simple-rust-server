@@ -1,33 +1,34 @@
+pub mod schema;
+pub mod db_models;
+mod db_utils;
+mod services;
+
+
+//main services
+use actix::SyncArbiter;
 use actix_files as fs;
-use actix_web::{get, post, delete, put, patch, web, App, HttpResponse, HttpServer, Responder};
-use lazy_static::lazy_static;
-use tera::Tera;
+use actix_web::{ web::Data, App, HttpServer };
+use diesel::{
+    r2d2::{ConnectionManager, Pool},
+    PgConnection
+};
+use dotenvy::dotenv;
+use std::env;
 
-lazy_static! {
-    pub static ref TEMPLATES: Tera = {
-        let source = "templates/**/*";
-        let tera = Tera::new(source).unwrap();
-        tera
-    };
-}
-
-#[get("/")]
-async fn index() -> impl Responder {
-    let mut context = tera::Context::new();
-    context.insert("hello_from_rust", "this comes from rust!");
-    let page_content = TEMPLATES.render("index.html", &context).unwrap();
-    HttpResponse::Ok().body(page_content)
-}
-
-#[get("/ping")]
-async fn pong() -> impl Responder {
-    HttpResponse::Ok().body("Pong!")
-}
+//my services
+use services::{index, pong};
+use db_utils::{get_pool, AppState, DbActor};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    HttpServer::new(|| {
+    dotenv().ok();
+    let db_url: String = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let pool: Pool<ConnectionManager<PgConnection>> = get_pool(&db_url);
+    let db_addr = SyncArbiter::start(5, move || DbActor(pool.clone()));
+
+    HttpServer::new(move || {
         App::new()
+            .app_data(Data::new(AppState {db: db_addr.clone()}))
             .service(index)
             .service(pong)
             .service(fs::Files::new("/static", "./static").show_files_listing())
