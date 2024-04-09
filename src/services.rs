@@ -1,4 +1,4 @@
-use actix_web::{get, post, delete, put, patch, web, web::Data, App, HttpResponse, HttpServer, Responder};
+use actix_web::{get, HttpResponse, Responder};
 use lazy_static::lazy_static;
 use tera::Tera;
 
